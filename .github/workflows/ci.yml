@@ -93,12 +93,15 @@ jobs:
       - run: npm run test:api
 
   test-ui:
-    name: UI tests ${{ matrix.shard }}/4 (${{ github.event_name == 'pull_request' && 'smoke' || github.event_name == 'workflow_dispatch' && inputs.suite || 'full regression' }})
+    name: UI tests ${{ matrix.shard }}/${{ github.event_name == 'pull_request' && 2 || 8 }} (${{ github.event_name == 'pull_request' && 'smoke' || github.event_name == 'workflow_dispatch' && inputs.suite || 'full regression' }})
     runs-on: ubuntu-latest
     needs: [build, quality, unit]
     strategy:
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: >-
+          ${{ fromJSON(github.event_name == 'pull_request'
+              && '[1,2]'
+              || '[1,2,3,4,5,6,7,8]') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -111,7 +114,7 @@ jobs:
 
       - name: Resolve Playwright version
         id: pw
-        run: npx playwright test --project=ui-chromium --shard=${{ matrix.shard }}/4 ${{ env.GREP }}
+        run: npx playwright test --project=ui-chromium --shard=${{ matrix.shard }}/${{ github.event_name == 'pull_request' && 2 || 8 }} ${{ env.GREP }}
         
       - name: Cache Playwright browsers
         id: pw-cache
